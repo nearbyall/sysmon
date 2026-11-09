@@ -714,6 +714,8 @@ class FsWatcher(threading.Thread):
             if remote:
                 st, stale = self._stat_remote(mnt)
             else:
+                if not os.path.isdir(mnt):
+                    continue  # a bind-mounted file (e.g. inside containers)
                 try:
                     st = os.statvfs(mnt)
                 except OSError:
@@ -1560,9 +1562,11 @@ def render_body(mon, ui, W, avail):
     for rows, detail in layout_plans(W):
         built = [[BUILDERS[k](mon, w, detail) for k, w in row] for row in rows]
         heights = [max(p.min_height() for p in row) for row in built]
-        proc_min = max(7, avail * 2 // 5) if detail == 2 else 7
+        proc_min = max(7, avail * 2 // 5)
         if sum(heights) + proc_min <= avail:
             break
+    # Hand out the spare rows round-robin: each panel row (graphs, longer
+    # lists) up to what it can use, and every other turn to the process list.
     caps = [max(p.max_height() for p in row) for row in built]
     extra = avail - proc_min - sum(heights)
     while extra > 0:
@@ -1574,6 +1578,7 @@ def render_body(mon, ui, W, avail):
                 grown = True
         if not grown:
             break
+        extra -= 1  # the process list's turn
     out = []
     for row, hgt in zip(built, heights):
         for parts in zip(*[p.render(hgt) for p in row]):
@@ -1691,6 +1696,7 @@ def render_once(mon, ui, W, nprocs):
         hgt = max(p.max_height() for p in built)
         for parts in zip(*[p.render(hgt) for p in built]):
             lines.append("".join(parts))
+    nprocs = min(nprocs, len(visible_procs(mon, ui)))
     if nprocs > 0:
         lines += build_procs(mon, ui, W, nprocs + 3)
     return [vfit(l, W) for l in lines]
@@ -1959,13 +1965,13 @@ def run_once(args):
     mon.fs.snapshot(wait=1.0)
     time.sleep(0.5)
     mon.sample()
-    if args.width:
-        W = args.width
-    elif "COLUMNS" in os.environ or sys.stdout.isatty():
-        W = os.get_terminal_size().columns if sys.stdout.isatty() else int(os.environ["COLUMNS"])
-    else:
-        W = 120
-    W = max(40, W)
+    W = args.width
+    if not W:
+        try:
+            W = os.get_terminal_size(sys.stdout.fileno()).columns
+        except OSError:
+            W = int(os.environ.get("COLUMNS", "0")) if os.environ.get("COLUMNS", "").isdigit() else 0
+    W = max(40, W or 120)
     ui = UI(sort=args.sort)
     text = "\n".join(render_once(mon, ui, W, args.procs)) + "\n"
     try:
