@@ -24,16 +24,21 @@ A pretty live system monitor for the Linux console: CPU, memory, network, disks 
 
 ## Installation
 
+Install it as the `sysmon` command, available from any directory:
+
 ```sh
-curl -o sysmon https://raw.githubusercontent.com/nearbyall/sysmon/main/sysmon
-chmod +x sysmon
-./sysmon
+sudo curl -fsSL -o /usr/local/bin/sysmon https://raw.githubusercontent.com/nearbyall/sysmon/main/sysmon
+sudo chmod +x /usr/local/bin/sysmon
+sysmon
 ```
 
-To run it as `sysmon` from any directory:
+Run the same two commands again to update. To uninstall: `sudo rm /usr/local/bin/sysmon`.
+
+To try it without installing:
 
 ```sh
-sudo install -m 755 sysmon /usr/local/bin/sysmon
+curl -fsSL -o sysmon https://raw.githubusercontent.com/nearbyall/sysmon/main/sysmon
+sh sysmon
 ```
 
 ## Keys

@@ -24,16 +24,21 @@
 
 ## Установка
 
+Установите как команду `sysmon`, которая работает из любой папки:
+
 ```sh
-curl -o sysmon https://raw.githubusercontent.com/nearbyall/sysmon/main/sysmon
-chmod +x sysmon
-./sysmon
+sudo curl -fsSL -o /usr/local/bin/sysmon https://raw.githubusercontent.com/nearbyall/sysmon/main/sysmon
+sudo chmod +x /usr/local/bin/sysmon
+sysmon
 ```
 
-Чтобы запускать командой `sysmon` из любой папки:
+Чтобы обновить, выполните те же две команды ещё раз. Удалить: `sudo rm /usr/local/bin/sysmon`.
+
+Попробовать без установки:
 
 ```sh
-sudo install -m 755 sysmon /usr/local/bin/sysmon
+curl -fsSL -o sysmon https://raw.githubusercontent.com/nearbyall/sysmon/main/sysmon
+sh sysmon
 ```
 
 ## Клавиши
