@@ -1,122 +1,62 @@
 # sysmon
 
-Красивый живой мониторинг Linux-машины прямо в консоли: процессор, память,
-сеть, диски и процессы на одном экране. Как `top` + `free` + `df` + `iftop`
-вместе, только с цветными графиками.
+[Русский](README.ru.md) | **English**
 
-Это **один файл**, ничего ставить не нужно. Работает по SSH, в обычном
-терминале и в «голой» текстовой консоли сервера без графики.
+A pretty live system monitor for the Linux console: CPU, memory, network, disks and processes on one screen. A single file with no dependencies that works over SSH and on a bare server console.
 
-```
- ◆ sysmon │ myserver │ Ubuntu 24.04 LTS │ 6.8.0-45-generic x86_64 │ up 4d 3h 21m      18:15:51
-╭─ CPU AMD EPYC-Rome ──────────── 3.60 GHz ─╮╭─ Memory 7.8G ──────────────── avail 3.9G ─╮
-│ █████████████████████▌░░░░░░░░░░░░  44.0% ││ RAM  ███████████████████▍░░  45.0% 3.5G/7.8G │
-│ usr 35.3%  sys 8.6%  wait 0.0%  irq 0.0%  ││ Swap ████▎░░░░░░░░░░░░░░░░░  25.9% 1.0G/4.0G │
-│ 0 ████████████████▊░░░░░░░░░░░░░░░░  42%  ││ avail  3.9G   used   3.5G   cache  3.4G    │
-│ 1 ███████████████████▋░░░░░░░░░░░░░  48%  ││ pressure  cpu 11.4%  mem 0.0%  io 0.0%     │
-╰─ load 1.06 1.24 1.05 ─────────── 2 cores ─╯╰──────────────────────────────────────────╯
-╭─ Network ─────────────── ↓ 6.3G  ↑ 1.9G ─╮╭─ Disks ──────────────── R 0B/s  W 27K/s ─╮
-│ ↓ RX    5.7K/s                            ││ /          ███████▊░░░░░░  49% 36.6G/78G │
-│ ↑ TX   22.6K/s                            ││ /boot/efi  ████░░░░░░░░░░  29% 10M/35.4M │
-│ ● ens3   144.31.197.202  ↓ 5.7K  ↑ 22.6K  ││ vda        R 0B/s  W 27.4K/s  ░░░░░   1% │
-╰───────────────────────────────────────────╯╰──────────────────────────────────────────╯
-╭─ Processes ─────────────────────────────────── 323 tasks · 3 running · 1133 threads ─╮
-│     PID USER      S CPU%▼  MEM%   RES    TIME+ COMMAND                               │
-│   11503 alex      S  25.3   2.4  194M 50:00.90 x2goagent -nolisten tcp               │
-│   12573 alex      S   8.4   0.7 53.3M 13:42.99 xfce4-terminal                        │
-╰─ sort cpu ▼ ─────────────────────────────────────────────────────────── 1-15 of 205 ─╯
-```
+![sysmon](docs/demo.gif)
 
-В живом режиме всё это в цвете и обновляется каждую секунду, а у CPU, памяти
-и сети ещё есть графики истории.
+## What it shows
 
-## Как запустить
+| Panel | Description |
+| --- | --- |
+| Header | Hostname, OS, kernel, uptime, login sessions, battery, clock |
+| CPU | Total load split into usr/sys/iowait/irq/steal, history graph, per-core load, frequency, temperature, load average |
+| Memory | RAM and swap like `free`: used, cache, available, pressure (PSI), history graph |
+| Network | Receive and transmit speed with a graph and peaks, interfaces with IP addresses |
+| Disks | Usage of every filesystem like `df`, read/write speed and utilisation of every disk |
+| Processes | Process list like `top`: CPU, memory, CPU time, full command line |
 
-Скачай файл `sysmon` на машину и выполни:
+## Requirements
+
+- Linux
+- Python 3.6+ (preinstalled on almost every distribution; no packages needed)
+
+## Installation
 
 ```sh
-chmod +x sysmon     # один раз: разрешить запуск
-./sysmon            # запустить
+curl -o sysmon https://raw.githubusercontent.com/nearbyall/sysmon/main/sysmon
+chmod +x sysmon
+./sysmon
 ```
 
-Можно и так, без `chmod`:
-
-```sh
-sh sysmon
-```
-
-Выход: клавиша `q`.
-
-Чтобы запускать командой `sysmon` из любой папки, положи файл в системный путь:
+To run it as `sysmon` from any directory:
 
 ```sh
 sudo install -m 755 sysmon /usr/local/bin/sysmon
 ```
 
-### Что нужно на машине
+## Keys
 
-Только Linux и `python3` (версии 3.6 или новее). Python уже есть почти во всех
-дистрибутивах: Ubuntu, Debian, Fedora, CentOS/RHEL, Rocky, Alma, openSUSE.
-Проверить: `python3 --version`. Если Python нет, `sysmon` сам подскажет
-команду для установки (например, `sudo apt install python3`).
+| Key | Action |
+| --- | --- |
+| `q` | Quit |
+| `↑` `↓` `PgUp` `PgDn` | Scroll the process list |
+| `c` `m` `p` `t` `n` | Sort by CPU / memory / PID / time / name (press again to reverse) |
+| `/` | Filter processes by name (`Esc` clears) |
+| `k` | Show or hide kernel threads |
+| `+` `-` | Refresh slower / faster |
+| `Space` | Pause |
+| `?` | Help |
 
-Права root не нужны. Сторонние библиотеки не нужны.
+## Options
 
-## Что показывает
+| Option | Description |
+| --- | --- |
+| `-i SEC` | Refresh interval, 1 second by default |
+| `-s cpu\|mem\|pid\|time\|name` | Initial sort order |
+| `--once` | Print one snapshot and exit (also used automatically when the output is redirected) |
+| `--ascii` | ASCII-only drawing for fonts without box and block characters |
+| `--colors 16\|256\|truecolor` | Force the colour depth |
 
-| Панель | Что внутри |
-|---|---|
-| Шапка | имя машины, ОС, ядро, аптайм, число сессий, батарея (на ноутбуках), часы |
-| **CPU** | общая загрузка, разбивка usr/sys/iowait/irq/steal, график, загрузка каждого ядра, частота, температура, load average |
-| **Memory** | RAM и swap (как `free`): занято, кэш, доступно, shared, dirty, давление (PSI), график |
-| **Network** | скорость приёма/отдачи, график, пики, интерфейсы с IP-адресами |
-| **Disks** | заполненность разделов (как `df`), скорость чтения/записи и загрузка каждого диска |
-| **Processes** | список процессов (как `top`): PID, пользователь, CPU%, MEM%, память, время, команда |
-
-## Клавиши
-
-| Клавиша | Действие |
-|---|---|
-| `q` | выход |
-| `↑` `↓` `PgUp` `PgDn` `Home` `End` | листать список процессов |
-| `c` `m` `p` `t` `n` | сортировка: по CPU / памяти / PID / времени / имени (повторное нажатие переворачивает) |
-| `r` | обратный порядок сортировки |
-| `/` | поиск процесса по имени (Enter применить, Esc сбросить) |
-| `k` | показать/скрыть потоки ядра |
-| `+` `-` | обновлять реже / чаще |
-| пробел | пауза |
-| `?` | справка по клавишам |
-
-## Полезные параметры
-
-```sh
-./sysmon -i 2          # обновлять раз в 2 секунды
-./sysmon -s mem        # сразу сортировать процессы по памяти
-./sysmon --once        # один снимок в текст и выход (удобно для логов и ssh)
-./sysmon --once -n 30  # снимок с 30 процессами
-./sysmon --ascii       # только ASCII-символы, если шрифт показывает «квадратики»
-./sysmon --help        # все параметры
-```
-
-Если вывод перенаправлен в файл или в другую программу
-(`./sysmon > report.txt`), `sysmon` сам делает один снимок без цветов.
-
-## Если что-то выглядит странно
-
-- **Вместо рамок и полосок квадратики или мусор.** Запусти `./sysmon --ascii`.
-- **Цвета блеклые или неправильные.** Попробуй `--colors 256` или `--colors 16`.
-- **В текстовой консоли сервера (не в окне терминала)** `sysmon` сам
-  переключается на символы и цвета, которые понимает консольный шрифт.
-
-## Для разработчика
-
-Это один файл на Python без зависимостей: данные читаются напрямую из `/proc`
-и `/sys`. Первые строки файла — обёртка на `sh`, которая находит Python и
-перезапускает через него этот же файл. Поэтому работают и `./sysmon`, и
-`sh sysmon`.
-
-Тесты:
-
-```sh
-python3 -m unittest discover -s tests -v
-```
+Colours and symbols adapt to the terminal automatically, including the Linux text console.
